@@ -7,7 +7,6 @@ const {
   SmartSpectraSDK,
   ProcessingStatus,
   ValidationCode,
-  breathingMetrics,
   cardioMetrics,
   faceMetrics,
 } = require('@smartspectra/node-sdk/renderer');
@@ -130,6 +129,7 @@ function friendlyMessage(code, detail) {
     case 'startup/E_TIMEOUT':
       return 'Startup timed out waiting for the first frame. Check the camera, then press Start again.';
     case 'stream/E_NO_FACE':
+    case 'stream/kNoFaceFound':
       return 'No face detected. Center your face in the frame and hold still.';
     case 'stream/E_LOW_SIGNAL':
       return 'Signal is weak. Hold still in even light; readings resume on their own.';
@@ -254,7 +254,10 @@ function expressionName(type) {
 function buildSdk() {
   state.sdk = new SmartSpectraSDK({
     apiKey: API_KEY,
-    requestedMetrics: [...breathingMetrics, ...cardioMetrics, ...faceMetrics],
+    // Pulse (face rPPG) + expressions only. Breathing metrics need a
+    // visible chest and would hold the session in kChestNotVisible on a
+    // face-framed feed, so they stay out.
+    requestedMetrics: [...cardioMetrics, ...faceMetrics],
     enableAccumulatedOutput: false,
   });
 
@@ -280,7 +283,7 @@ function buildSdk() {
       showError('stream/E_NO_FACE', hint || name);
     } else {
       setStateLine('Weak signal. Hold still in even light.', true);
-      showError('stream/E_LOW_SIGNAL', hint ? `${name}: ${hint}` : name);
+      showError(`stream/${name}`, hint ? `${name}: ${hint}` : name);
     }
   });
 
