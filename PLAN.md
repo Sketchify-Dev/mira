@@ -1,0 +1,29 @@
+# Mira - PLAN
+
+A living mirror that feels your pulse: face expressions change the character/scene, live pulse sets tempo and glow. Electron desktop app, SmartSpectra Node SDK, Most Creative or Delightful lane. Deadline Nov 22, 11:59 PM PST.
+
+## Step 1: Electron shell + SDK smoke test
+- Scaffold Electron app in `electron/` (main, preload, renderer) wired to `@smartspectra/node-sdk` per electron-quickstart.
+- Show camera preview + raw pulse BPM and top expression on screen.
+- Test: `npm run start` in `electron/`, see live BPM and expression update with your face in frame.
+
+## Step 2: Mock signal mode
+- Add `?mock=1` renderer path emitting fake pulse/expression stream (sine BPM 60-100, cycling expressions).
+- Test: run with mock flag, no camera or key needed, values animate.
+
+## Step 3: Mirror scene v1
+- One full-screen scene: expression picks character mood/color, pulse BPM drives pulse ring tempo and glow.
+- Consent gate on launch (camera permission explainer + opt-in button), no frames stored.
+- Test: live camera changes mood within 2s of expression change; ring tempo tracks BPM.
+
+## Step 4: Polish + delight
+- Add 3 expression states minimum (happy, surprised, neutral), smooth transitions, sound-free.
+- Empty states: no-face, low-confidence, camera-denied.
+- Test: each state reachable on camera; screenshots at 1440 and 390-equivalent window.
+
+## Step 5: Submission pack
+- Demo video (live signal visible), public repo, DEV post with Consent and Data Handling section.
+- Test: fresh clone, `npm install && npm run start` works; judge checklist passes.
+
+## Out of scope
+No diagnosis claims, no data storage, no login, no Next.js web deploy of the SDK path.

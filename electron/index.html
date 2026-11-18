@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:; media-src blob: 'self';">
+  <title>Mira, a living mirror</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header>
+    <h1 class="wordmark" aria-label="Mira"><span aria-hidden="true">Mira</span></h1>
+    <div class="header-right">
+      <span id="status-badge" class="status status-uninitialized">Idle</span>
+    </div>
+  </header>
+
+  <div id="error-banner" class="error-banner" hidden>
+    <span class="error-banner-code" id="error-code">--</span>
+    <span class="error-banner-message" id="error-message"></span>
+  </div>
+
+  <main>
+    <!-- Consent gate: shown first, camera never starts before Begin -->
+    <section id="consent-gate" class="consent">
+      <p class="consent-kicker">Before you begin</p>
+      <h2 class="consent-title">Your camera stays with you</h2>
+      <p class="consent-body">Mira reads your pulse and expressions from your camera to shape the mirror. Frames never leave this device. Nothing is recorded, stored, or sent anywhere. This is wellness feedback only, never a medical reading.</p>
+      <div class="consent-actions">
+        <button id="btn-begin" type="button" class="primary">Begin mirror</button>
+      </div>
+      <p class="consent-note">You can stop the camera at any time with the Stop button.</p>
+    </section>
+
+    <!-- Mirror scene: hidden until Begin -->
+    <section id="mirror" class="mirror" hidden>
+      <div class="scene" id="scene">
+        <div class="pulse-ring" id="pulse-ring" aria-hidden="true"></div>
+        <div class="scene-mood">
+          <p class="mood-name" id="mood-name">Still water</p>
+          <p class="mood-descriptor" id="mood-descriptor">Breathe easy.</p>
+        </div>
+        <div class="scene-preview" id="scene-preview">
+          <video id="preview" autoplay playsinline muted></video>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <p class="stat-label">Heart rate</p>
+          <p class="stat-value num"><span id="readout-pulse">--</span> <span class="stat-unit">BPM</span></p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Expression</p>
+          <p class="stat-value" id="readout-expression">--</p>
+        </div>
+      </div>
+
+      <p id="state-line" class="state-line" role="status">Press Start to begin.</p>
+
+      <div class="controls">
+        <button id="btn-start" type="button" class="primary">Start</button>
+        <button id="btn-stop" type="button" disabled>Stop</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="./dist/renderer.bundle.js"></script>
+</body>
+</html>
