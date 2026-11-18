@@ -247,6 +247,7 @@ main {
   opacity: 0.85;
   transform: scale(0.95);
   animation: pulse-ring 1s ease-out infinite;
+transition: border-color 800ms ease-out, box-shadow 800ms ease-out;
 }
 
 @keyframes pulse-ring {

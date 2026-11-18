@@ -123,7 +123,7 @@ function hideError() {
 function friendlyMessage(code, detail) {
   switch (code) {
     case 'startup/E_CAMERA':
-      return `Couldn’t open the camera. Check the camera permission, then try again. (${detail})`;
+      return `The camera is blocked or denied. Allow camera access for Mira in the browser or OS prompt, then press Start to try again. (${detail})`;
     case 'startup/E_API_KEY':
       return detail || 'The API key is missing or rejected. Check .env, then try again.';
     case 'startup/E_TIMEOUT':
