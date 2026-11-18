@@ -7,7 +7,7 @@ const {
   SmartSpectraSDK,
   ProcessingStatus,
   ValidationCode,
-  cardioMetrics,
+  MetricType,
   faceMetrics,
 } = require('@smartspectra/node-sdk/renderer');
 const { decodeMetrics } = require('@smartspectra/node-sdk/messages');
@@ -254,10 +254,10 @@ function expressionName(type) {
 function buildSdk() {
   state.sdk = new SmartSpectraSDK({
     apiKey: API_KEY,
-    // Pulse (face rPPG) + expressions only. Breathing metrics need a
-    // visible chest and would hold the session in kChestNotVisible on a
-    // face-framed feed, so they stay out.
-    requestedMetrics: [...cardioMetrics, ...faceMetrics],
+    // Pulse (face rPPG) + expressions only. ARTERIAL_PRESSURE_TRACE and
+    // HRV stay out: the bp model fails to init on this box and the session
+    // sits in kChestNotVisible on a face-framed feed with them requested.
+    requestedMetrics: [MetricType.PULSE_RATE, ...faceMetrics],
     enableAccumulatedOutput: false,
   });
 
