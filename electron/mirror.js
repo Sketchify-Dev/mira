@@ -24,7 +24,11 @@ function ringPeriodMs(bpm) {
 }
 
 function isLowConfidence(confidence) {
-  return confidence == null || confidence < LOW_CONFIDENCE;
+  return typeof confidence === 'number' && confidence < LOW_CONFIDENCE;
 }
 
-module.exports = { MOODS, LOW_CONFIDENCE, moodForExpression, ringPeriodMs, isLowConfidence };
+function isUnknownConfidence(confidence) {
+  return confidence == null || Number.isNaN(confidence);
+}
+
+module.exports = { MOODS, LOW_CONFIDENCE, moodForExpression, ringPeriodMs, isLowConfidence, isUnknownConfidence };

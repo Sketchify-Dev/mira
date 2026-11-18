@@ -13,7 +13,7 @@ const {
 } = require('@smartspectra/node-sdk/renderer');
 const { decodeMetrics } = require('@smartspectra/node-sdk/messages');
 const { createMockSignalSource } = require('./mock-signals');
-const { moodForExpression, ringPeriodMs, isLowConfidence } = require('./mirror');
+const { moodForExpression, ringPeriodMs, isLowConfidence, isUnknownConfidence } = require('./mirror');
 
 // Key arrives async over IPC (see preload __miraBridge). Resolved once at
 // boot; empty string means main has no key configured.
@@ -169,7 +169,9 @@ function renderMirror({ bpm, expression, confidence }) {
   const glow = bpm == null ? 0.25 : Math.min(0.6, Math.max(0.15, (bpm - 60) / 100));
   els.pulseRing.style.boxShadow = `0 0 48px ${hexToRgba(mood.hue, glow)}`;
 
-  if (isLowConfidence(confidence)) {
+  if (isUnknownConfidence(confidence)) {
+    setStateLine('Warming up. The mirror is calibrating to your face.', false);
+  } else if (isLowConfidence(confidence)) {
     setStateLine('Weak signal. Hold still in even light.', true);
   } else {
     setStateLine(MOCK ? 'Demo signal. Live camera is off.' : 'Reading your pulse and expression.', false);
