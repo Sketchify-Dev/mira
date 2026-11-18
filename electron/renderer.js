@@ -306,7 +306,12 @@ function buildSdk() {
       showError('stream/E_DISCONNECT', message || String(code));
       scheduleReconnect();
     } else {
-      setPhase('error', { code: String(code) });
+      // Terminal SDK error: destroy so the next Start rebuilds clean
+      // instead of restarting a dead session (not in a valid state).
+      try { state.sdk.stop(); } catch { /* best effort */ }
+      try { state.sdk.destroy(); } catch { /* best effort */ }
+      state.sdk = null;
+      setPhase('failed', { code: String(code) });
       showError(String(code), message);
     }
   });
