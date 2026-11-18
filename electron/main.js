@@ -31,6 +31,28 @@ function loadDotEnv() {
 
 loadDotEnv();
 
+// Headless harness: software Vulkan (lavapipe) so GPU-backed model loaders
+// init without a GPU or sudo. Rewrites the bundled ICD to an absolute
+// library path in tmp (loader resolves relative paths against CWD) and
+// points the loader at it. Must run before first vkCreateInstance.
+if (HARNESS && !process.env.VK_ICD_FILENAMES) {
+  try {
+    const os = require('os');
+    const src = path.join(__dirname, 'sw-vulkan', 'lvp_icd.x86_64.json');
+    const lib = path.join(__dirname, 'sw-vulkan', 'libvulkan_lvp.so');
+    if (fs.existsSync(src) && fs.existsSync(lib)) {
+      const icd = JSON.parse(fs.readFileSync(src, 'utf8'));
+      icd.ICD.library_path = lib;
+      const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'mira-vk-')), 'lvp_icd.json');
+      fs.writeFileSync(out, JSON.stringify(icd));
+      process.env.VK_ICD_FILENAMES = out;
+      console.log('[mira:main] harness software Vulkan enabled');
+    }
+  } catch (e) {
+    console.warn('[mira:main] software Vulkan setup failed, continuing:', e.message);
+  }
+}
+
 // Key channel: the sandboxed renderer cannot read argv or env, so it asks
 // over IPC. Main owns the secret; the value never touches disk or query
 // strings. Shell env wins over .env (see loadDotEnv).
