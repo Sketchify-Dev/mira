@@ -251,17 +251,8 @@ function expressionName(type) {
   );
 }
 
-function buildSdk() {
-  state.sdk = new SmartSpectraSDK({
-    apiKey: API_KEY,
-    // Pulse (face rPPG) + expressions only. ARTERIAL_PRESSURE_TRACE and
-    // HRV stay out: the bp model fails to init on this box and the session
-    // sits in kChestNotVisible on a face-framed feed with them requested.
-    requestedMetrics: [MetricType.PULSE_RATE, ...faceMetrics],
-    enableAccumulatedOutput: false,
-  });
-
-  state.sdk.on('processingStatus', (status) => {
+function attachMirrorHandlers(sdk) {
+  sdk.on('processingStatus', (status) => {
     const label = STATUS_NAMES[status] || `Status(${status})`;
     if (status === ProcessingStatus.kRunning) {
       setPhase('running');
@@ -270,7 +261,7 @@ function buildSdk() {
     }
   });
 
-  state.sdk.on('validationStatus', (code, timestampUs, hint) => {
+  sdk.on('validationStatus', (code, timestampUs, hint) => {
     const name = VALIDATION_NAMES[code] || `Code(${code})`;
     if (code === ValidationCode.kOk) {
       if (state.phase === 'running') setStateLine('Reading your pulse and expression.', false);
@@ -287,7 +278,7 @@ function buildSdk() {
     }
   });
 
-  state.sdk.on('metrics', (buf) => {
+  sdk.on('metrics', (buf) => {
     try {
       const metrics = decodeMetrics(buf);
       if (metrics && typeof metrics.byteLength === 'number') return;
@@ -303,7 +294,7 @@ function buildSdk() {
     }
   });
 
-  state.sdk.on('error', (code, message, retryable) => {
+  sdk.on('error', (code, message, retryable) => {
     if (retryable) {
       setPhase('reconnecting');
       showError('stream/E_DISCONNECT', message || String(code));
@@ -319,7 +310,7 @@ function buildSdk() {
     }
   });
 
-  state.sdk.on('streamAvailable', (stream) => {
+  sdk.on('streamAvailable', (stream) => {
     els.preview.srcObject = stream;
     els.preview.play().catch(() => {});
     const [track] = stream.getVideoTracks ? stream.getVideoTracks() : [];
@@ -333,6 +324,21 @@ function buildSdk() {
       };
     }
   });
+
+}
+
+
+function buildSdk() {
+  state.sdk = new SmartSpectraSDK({
+    apiKey: API_KEY,
+    // Pulse (face rPPG) + expressions only. ARTERIAL_PRESSURE_TRACE and
+    // HRV stay out: the bp model fails to init on this box and the session
+    // sits in kChestNotVisible on a face-framed feed with them requested.
+    requestedMetrics: [MetricType.PULSE_RATE, ...faceMetrics],
+    enableAccumulatedOutput: false,
+  });
+
+  attachMirrorHandlers(state.sdk);
 }
 
 // If metrics stop arriving mid-run, say so instead of freezing silently.
@@ -373,23 +379,45 @@ async function startMeasurement() {
   setPhase('reconnecting'); // "Starting." visual while the SDK spins up
   els.statusBadge.textContent = 'Starting.';
   try {
-    if (!state.sdk) buildSdk();
+    if (!HARNESS && !state.sdk) buildSdk();
     if (HARNESS) {
-      // Headless harness: no camera on this box, so play the synthetic
-      // face video into a hidden element and hand its stream to the SDK.
-      // Same code path as live (useMediaStream + start), real frames.
-      const vid = document.createElement('video');
-      vid.muted = true; vid.loop = true; vid.playsInline = true;
-      vid.src = './harness-face.mp4';
-      await vid.play();
-      const stream = vid.captureStream ? vid.captureStream() : vid.mozCaptureStream();
-      if (!stream || stream.getVideoTracks().length === 0) {
-        throw new Error('harness: captureStream produced no video track');
+      // Headless harness: main owns a Node-side SDK session fed by useFile
+      // (the SDK pumps frames itself with steady timestamps). The renderer
+      // never touches captureStream: it loops the same synthetic feed in
+      // the preview for visual parity and routes main's forwarded session
+      // events into the shared mirror handlers. Listener attached once.
+      if (!state.harnessAttached && window.__miraBridge?.onHarnessEvent) {
+        state.harnessAttached = true;
+        window.__miraBridge.onHarnessEvent((ev) => {
+          if (!ev || !state.sdk) return;
+          const sdk = state.sdk;
+          if (ev.type === 'processingStatus') sdk.emit('processingStatus', ev.status);
+          else if (ev.type === 'validationStatus') sdk.emit('validationStatus', ev.code, ev.timestampUs, ev.hint);
+          else if (ev.type === 'metrics') sdk.emit('metrics', ev.buf);
+          else if (ev.type === 'error') sdk.emit('error', { code: ev.code }, ev.message, ev.retryable);
+        });
       }
-      els.preview.srcObject = stream;
+      // Shim with the start/stop/destroy shape the live path uses, so the
+      // stop/reconnect code below works unchanged. No local SDK exists: the
+      // real session lives in main.
+      const bridge = window.__miraBridge;
+      state.harnessHandlers = {};
+      state.sdk = {
+        on: (event, cb) => { (state.harnessHandlers ||= {})[event] ||= []; state.harnessHandlers[event].push(cb); },
+        emit: (event, ...args) => { for (const cb of (state.harnessHandlers?.[event] || [])) { try { cb(...args); } catch (e) { console.error('[mira] harness handler failed:', e); } } },
+        start: () => bridge.harnessStart(),
+        stop: () => bridge.harnessStop(),
+        destroy: () => bridge.harnessStop(),
+      };
+      // Mirror handlers (status/validation/metrics/error) attach below via
+      // buildSdk-style registration: do it here since there is no local SDK.
+      attachMirrorHandlers(state.sdk);
+      els.preview.src = './harness-face.mp4';
+      // NOTE: preview stays mp4; the SDK session reads harness-face.avi.
+      els.preview.loop = true;
+      els.preview.muted = true;
       els.preview.play().catch(() => {});
-      console.info('[mira] harness stream attached, tracks:', stream.getVideoTracks().length);
-      state.sdk.useMediaStream(stream);
+      console.info('[mira] harness file session requested from main');
     }
     console.info('[mira] starting SDK, key present:', API_KEY.length > 0);
     await state.sdk.start();
@@ -459,4 +487,13 @@ async function stopMeasurement() {
 els.btnStart.addEventListener('click', startMeasurement);
 els.btnStop.addEventListener('click', stopMeasurement);
 setPhase('gate');
-loadApiKey();
+loadApiKey().then(() => {
+  // Harness-only autostart for headless CI (no camera involved: the feed is
+  // the synthetic file). Pass ?autostart=1 with ?harness=1. Live mode always
+  // waits for the consent click.
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('harness') === '1' && params.get('autostart') === '1') {
+    els.btnBegin.click();
+    els.btnStart.click();
+  }
+});

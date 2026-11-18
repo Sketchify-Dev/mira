@@ -11,6 +11,55 @@ const { bindSmartSpectraIpc } = require('@smartspectra/node-sdk/main');
 const MOCK = process.argv.includes('--mock');
 const HARNESS = process.argv.includes('--harness');
 
+// Harness file session: in --harness mode main owns a Node-side SDK session
+// fed by useFile (the SDK pumps frames itself with correct timestamps).
+// Steady pacing, no video element, no display needed for frame flow.
+// Events are forwarded to the window; the renderer mirror code is shared.
+let harnessSdk = null;
+let harnessWin = null;
+let harnessRunSince = 0;
+function harnessSend(ev) {
+  try {
+    if (ev.type !== 'metrics') console.log(`[mira:harness] ${ev.type}`, ev.type === 'validationStatus' ? `code=${ev.code} hint=${(ev.hint || '').slice(0, 80)}` : ev.type === 'processingStatus' ? `status=${ev.status}` : `${(ev.message || '').slice(0, 120)}`);
+    else if (process.env.MIRA_HARNESS_LOG_METRICS) console.log('[mira:harness] metrics bytes=', ev.buf && ev.buf.length);
+    if (harnessWin && !harnessWin.isDestroyed()) harnessWin.webContents.send('mira:harness-event', ev);
+  } catch { /* window gone */ }
+}
+async function harnessStart() {
+  if (harnessSdk) return;
+  const { SmartSpectraSDK, MetricType, faceMetrics } = require('@smartspectra/node-sdk');
+  const sdk = new SmartSpectraSDK({
+    apiKey: process.env.MIRA_API_KEY || '',
+    requestedMetrics: [MetricType.PULSE_RATE, ...faceMetrics],
+    enableAccumulatedOutput: false,
+  });
+  sdk.on('processingStatus', (status) => {
+    if (status === 3) harnessRunSince = Date.now(); // kRunning
+    harnessSend({ type: 'processingStatus', status });
+    // EOF ends the file session: loop the synthetic feed while the window
+    // lives. Only auto-restart healthy-length runs, never error states.
+    if (status !== 3 && status !== 2 && harnessSdk === sdk && Date.now() - harnessRunSince > 5000) {
+      harnessRunSince = Date.now();
+      setImmediate(() => { if (harnessSdk === sdk) { try { sdk.stop(); } catch {} try { sdk.useFile(HARNESS_FILE, { interframeDelayMs: 33 }); sdk.start(); } catch (e) { harnessSend({ type: 'error', code: 'harness/E_LOOP', message: String(e.message || e), retryable: false }); } } });
+    }
+  });
+  sdk.on('validationStatus', (code, timestampUs, hint) => harnessSend({ type: 'validationStatus', code, timestampUs, hint: hint || '' }));
+  sdk.on('metrics', (buf) => harnessSend({ type: 'metrics', buf }));
+  sdk.on('error', (code, message, retryable) => harnessSend({ type: 'error', code: String(code && code.code !== undefined ? code.code : code), message: String(message || ''), retryable: !!retryable }));
+  sdk.useFile(HARNESS_FILE, { interframeDelayMs: 33 });
+  sdk.start();
+  harnessSdk = sdk;
+  harnessRunSince = Date.now();
+}
+async function harnessStop() {
+  const sdk = harnessSdk;
+  harnessSdk = null;
+  if (!sdk) return;
+  try { await sdk.stopAsync(); } catch { /* best effort */ }
+  try { await sdk.destroy(); } catch { /* already destroyed */ }
+}
+const HARNESS_FILE = path.join(__dirname, 'harness-face.avi');
+
 // Permanent key: .env (gitignored) fills process.env when the shell didn't.
 // One line, no dependency: KEY=VALUE, # comments, quotes stripped.
 function loadDotEnv() {
@@ -78,10 +127,18 @@ function createWindow() {
 
   bindSmartSpectraIpc(win);
 
+  if (HARNESS) {
+    harnessWin = win;
+    ipcMain.handle('mira:harness-start', async () => { await harnessStart(); });
+    ipcMain.handle('mira:harness-stop', async () => { await harnessStop(); });
+    win.on('closed', () => { harnessWin = null; harnessStop(); });
+  }
+
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.on('will-navigate', (event) => event.preventDefault());
 
-  win.loadFile(path.join(__dirname, 'index.html'), { query: Object.assign({}, MOCK ? { mock: '1' } : {}, HARNESS ? { harness: '1' } : {}) });
+  const AUTOSTART = process.argv.includes('--autostart');
+  win.loadFile(path.join(__dirname, 'index.html'), { query: Object.assign({}, MOCK ? { mock: '1' } : {}, HARNESS ? { harness: '1' } : {}, (HARNESS && AUTOSTART) ? { autostart: '1' } : {}) });
 }
 
 app.whenReady().then(() => {
