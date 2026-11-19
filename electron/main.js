@@ -142,11 +142,22 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  const allowMedia = (url) => typeof url === 'string' && url.startsWith('file://');
+  // Grant only the camera, and only to the bundled local page. Deny
+  // everything else so a window that later loads remote content cannot
+  // auto-grant the camera. Matches the SmartSpectra quickstart: check
+  // permission type plus origin, never mediaTypes (Electron omits it on
+  // some versions, and a strict check denies the video-only request).
+  if (session.defaultSession.setPermissionCheckHandler) {
+    session.defaultSession.setPermissionCheckHandler((wc, permission, requestingOrigin, details) => {
+      if (permission !== 'media') return false;
+      const url = (details && details.requestingUrl) || (wc && wc.getURL()) || requestingOrigin || '';
+      return allowMedia(url);
+    });
+  }
   session.defaultSession.setPermissionRequestHandler((wc, permission, callback, details) => {
     const url = (details && details.requestingUrl) || (wc && wc.getURL()) || '';
-    const mediaTypes = (details && details.mediaTypes) || [];
-    const cameraOnly = mediaTypes.length === 1 && mediaTypes[0] === 'video';
-    callback(permission === 'media' && cameraOnly && url.startsWith('file://'));
+    callback(permission === 'media' && allowMedia(url));
   });
 
   createWindow();
