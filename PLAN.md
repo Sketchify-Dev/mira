@@ -25,6 +25,7 @@ A living mirror that feels your pulse: face expressions change the character/sce
 ## Step 5: Submission pack
 - Demo video (live signal visible), public repo, DEV post with Consent and Data Handling section.
 - Test: fresh clone, `npm install && npm run start` works; judge checklist passes.
+- Status: README rewritten (How to Test first, Consent and Data Handling, judge checklist). Fresh-clone verified: install + build pass, mirror mapping tests pass, no dashes, no medical claims. Demo clip committed. Remaining: public repo push, DEV post, live-signal demo note (sandbox has no route to Presage backend; demo on open network or judge-side key).
 
 ## Out of scope
 No diagnosis claims, no data storage, no login, no Next.js web deploy of the SDK path.

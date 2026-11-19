@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mira, a living mirror
 
-## Getting Started
+Mira reads your pulse and expressions from your camera and shapes a living mirror: the scene tint follows your expression, the ring breathes at your heart's tempo. Built with the Presage SmartSpectra SDK (`@smartspectra/node-sdk`), Electron 43, and three.js. Most Creative / Delightful lane.
 
-First, run the development server:
+![Mira mirror in Happy mood](electron/screenshots/mood-happy-1440.png)
+
+SmartSpectra tech used: `PULSE_RATE` + face metrics via the Node SDK, no diagnosis, no storage, no network calls with video.
+
+## How to Test
+
+No camera or key needed for the demo path:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd electron
+npm install
+npm run start:mock
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Click **Begin mirror**, then **Start**. The mirror cycles Neutral, Happy, Surprised, Sad with a demo pulse (60 to 100 BPM). Screenshots: `electron/screenshots/`. Clip: `electron/demo-mirror.mp4`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Live camera path (needs a Presage key):
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd electron
+MIRA_API_KEY=your_key_here npm run start
+```
 
-## Learn More
+Or put `MIRA_API_KEY=your_key_here` in `electron/.env` (gitignored). Consent gate appears first; the camera never starts before Begin.
 
-To learn more about Next.js, take a look at the following resources:
+## Consent and Data Handling
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- The camera never starts before you press Begin mirror.
+- Frames never leave this device. Nothing is recorded, stored, or sent anywhere.
+- Wellness feedback only, never a medical reading. The app makes no diagnosis or treatment claims.
+- Weak signal states are surfaced honestly (no face, low confidence, camera denied).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Repo layout
 
-## Deploy on Vercel
+- `electron/` is the challenge app: main, preload, renderer, `living-scene.js` (three.js glow field), `mirror.js` (expression to mood map), `mock-signals.js` (demo source).
+- `app/` is the untouched Next.js starter; out of scope for the SDK path, kept building.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Judge checklist
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] `cd electron && npm install && npm run start:mock` runs, Begin then Start shows the mirror
+- [ ] Mood label changes as the demo cycles; ring tempo tracks BPM
+- [ ] Consent gate blocks the camera until Begin
+- [ ] Screenshots in `electron/screenshots/` match the live UI
+- [ ] `electron/demo-mirror.mp4` plays (silent, 17s)
