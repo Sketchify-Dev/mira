@@ -20,6 +20,7 @@ A living mirror that feels your pulse: face expressions change the character/sce
 - Add 3 expression states minimum (happy, surprised, neutral), smooth transitions, sound-free.
 - Empty states: no-face, low-confidence, camera-denied.
 - Test: each state reachable on camera; screenshots at 1440 and 390-equivalent window.
+- Status: UI de-slopped per electron/design.md (anti AI slop rules binding, unslop counter 0). Screenshots in electron/screenshots/: consent gate, Neutral/Happy/Surprised/Sad at 1440, Happy at 390. Found and fixed consent gate staying visible after Begin (display:flex overrode hidden). Sad/Happy verified visually; Neutral/Surprise captured at correct mock times.
 
 ## Step 5: Submission pack
 - Demo video (live signal visible), public repo, DEV post with Consent and Data Handling section.

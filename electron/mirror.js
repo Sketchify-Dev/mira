@@ -5,10 +5,10 @@
 // for the sandboxed renderer.
 
 const MOODS = {
-  Happy: { name: 'Happy', descriptor: 'Bright. Keep smiling.', hue: '#e8a020' },
-  Surprise: { name: 'Surprised', descriptor: 'Electric. Something sparked.', hue: '#d9531e' },
-  Sad: { name: 'Sad', descriptor: 'Low tide. Take it slow.', hue: '#5b7fa6' },
-  Neutral: { name: 'Neutral', descriptor: 'Still water. Breathe easy.', hue: '#78716c' },
+  Happy: { name: 'Happy', hue: '#e8a020' },
+  Surprise: { name: 'Surprised', hue: '#d9531e' },
+  Sad: { name: 'Sad', hue: '#5b7fa6' },
+  Neutral: { name: 'Neutral', hue: '#78716c' },
 };
 
 const LOW_CONFIDENCE = 0.5;

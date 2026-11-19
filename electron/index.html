@@ -27,13 +27,11 @@
   <main>
     <!-- Consent gate: shown first, camera never starts before Begin -->
     <section id="consent-gate" class="consent">
-      <p class="consent-kicker">Before you begin</p>
       <h2 class="consent-title">Your camera stays with you</h2>
       <p class="consent-body">Mira reads your pulse and expressions from your camera to shape the mirror. Frames never leave this device. Nothing is recorded, stored, or sent anywhere. This is wellness feedback only, never a medical reading.</p>
       <div class="consent-actions">
         <button id="btn-begin" type="button" class="primary">Begin mirror</button>
       </div>
-      <p class="consent-note">You can stop the camera at any time with the Stop button.</p>
     </section>
 
     <!-- Mirror scene: hidden until Begin -->
@@ -41,8 +39,7 @@
       <div class="scene" id="scene">
         <div class="pulse-ring" id="pulse-ring" aria-hidden="true"></div>
         <div class="scene-mood">
-          <p class="mood-name" id="mood-name">Still water</p>
-          <p class="mood-descriptor" id="mood-descriptor">Breathe easy.</p>
+          <p class="mood-name" id="mood-name">--</p>
         </div>
         <div class="scene-preview" id="scene-preview">
           <video id="preview" autoplay playsinline muted></video>

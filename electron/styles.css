@@ -2,14 +2,11 @@
   color-scheme: light;
   --paper: #f6f1e6;
   --paper-deep: #eee3d0;
-  --glass: rgba(255, 255, 255, 0.62);
-  --glass-solid: #fffdf8;
+  --glass: #fffdf8;
   --glass-border: rgba(30, 27, 22, 0.1);
   --ink: #1e1b16;
   --muted: #6a6055;
-  --faint: #8d8272;
   --accent: #d9531e;
-  --accent-soft: rgba(217, 83, 30, 0.12);
   --positive-bg: #e6efd2;
   --positive-ink: #47600f;
   --warn-bg: #f7e8c9;
@@ -20,8 +17,6 @@
   --radius-control: 999px;
   --gap: 0.875rem;
   --pad: 1.375rem;
-  --fs-title: 1.25rem;
-  --fs-section: 1rem;
   --fs-kpi: 1.5rem;
   --fs-body: 0.875rem;
   --fs-small: 0.75rem;
@@ -46,11 +41,7 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(120% 60% at 15% -10%, rgba(255, 196, 130, 0.55) 0%, rgba(255, 196, 130, 0) 55%),
-    radial-gradient(120% 70% at 90% 0%, rgba(255, 150, 120, 0.4) 0%, rgba(255, 150, 120, 0) 50%),
-    radial-gradient(140% 90% at 50% 115%, rgba(190, 170, 255, 0.28) 0%, rgba(190, 170, 255, 0) 55%),
-    linear-gradient(180deg, #faf5ea 0%, var(--paper) 45%, var(--paper-deep) 100%);
+  background: var(--paper);
 }
 
 header {
@@ -69,25 +60,13 @@ header h1.wordmark {
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin: 0;
-  background: linear-gradient(100deg, #1e1b16 20%, #d9531e 45%, #e8a020 50%, #d9531e 55%, #1e1b16 80%);
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: wordmark-sheen 9s ease-in-out infinite;
+  color: var(--ink);
 }
 
-@keyframes wordmark-sheen {
-  0%, 100% { background-position: 0% 0; }
-  50% { background-position: 100% 0; }
-}
-
-/* While the mirror runs, the wordmark breathes at the heart's tempo.
+/* While the mirror runs, the wordmark beats at the heart's tempo.
    Renderer sets --beat-ms from live BPM; default is a calm 60 BPM. */
 body.is-live .wordmark {
-  animation: wordmark-sheen 9s ease-in-out infinite,
-    wordmark-beat var(--beat-ms, 1000ms) ease-in-out infinite;
+  animation: wordmark-beat var(--beat-ms, 1000ms) ease-in-out infinite;
 }
 
 @keyframes wordmark-beat {
@@ -97,7 +76,7 @@ body.is-live .wordmark {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wordmark, body.is-live .wordmark { animation: none; }
+  body.is-live .wordmark { animation: none; }
 }
 
 .header-right { display: flex; align-items: center; gap: 0.75rem; }
@@ -152,14 +131,6 @@ main {
   padding: 2rem 0;
   max-width: 60ch;
 }
-.consent-kicker {
-  font-size: var(--fs-small);
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin: 0;
-}
 .consent-title {
   font-family: var(--display);
   font-size: 2.5rem;
@@ -178,11 +149,7 @@ main {
   max-width: 60ch;
 }
 .consent-actions { display: flex; margin-top: 0.5rem; }
-.consent-note {
-  font-size: var(--fs-small);
-  color: var(--faint);
-  margin: 0;
-}
+.consent[hidden] { display: none; }
 
 /* --- Mirror scene --- */
 .mirror {
@@ -195,12 +162,9 @@ main {
 
 .scene {
   position: relative;
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  backdrop-filter: blur(20px) saturate(1.2);
+  background-color: color-mix(in srgb, var(--mood-hue) 10%, var(--paper));
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-card);
-  box-shadow: 0 24px 60px rgba(60, 45, 25, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   min-height: 16rem;
   max-height: 55dvh;
   aspect-ratio: 4 / 3;
@@ -209,33 +173,6 @@ main {
   align-items: center;
   justify-content: center;
   transition: background-color 800ms ease-out;
-  isolation: isolate;
-}
-
-.scene::before,
-.scene::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.55;
-  z-index: -1;
-  transition: background-color 800ms ease-out;
-  background-color: var(--mood-hue);
-}
-.scene::before {
-  width: 60%;
-  aspect-ratio: 1;
-  left: -12%;
-  top: -25%;
-  opacity: 0.32;
-}
-.scene::after {
-  width: 52%;
-  aspect-ratio: 1;
-  right: -10%;
-  bottom: -28%;
-  opacity: 0.24;
 }
 
 .pulse-ring {
@@ -247,7 +184,7 @@ main {
   opacity: 0.85;
   transform: scale(0.95);
   animation: pulse-ring 1s ease-out infinite;
-transition: border-color 800ms ease-out, box-shadow 800ms ease-out;
+  transition: border-color 800ms ease-out, opacity 800ms ease-out;
 }
 
 @keyframes pulse-ring {
@@ -258,7 +195,7 @@ transition: border-color 800ms ease-out, box-shadow 800ms ease-out;
 
 @media (prefers-reduced-motion: reduce) {
   .pulse-ring { animation: none; opacity: 0.4; transform: scale(1); }
-  .scene, .scene::before, .scene::after { transition: none; }
+  .scene { transition: none; }
 }
 
 .scene-mood {
@@ -275,12 +212,6 @@ transition: border-color 800ms ease-out, box-shadow 800ms ease-out;
   text-wrap: balance;
   margin: 0;
 }
-.mood-descriptor {
-  font-size: var(--fs-body);
-  color: var(--muted);
-  text-wrap: pretty;
-  margin: 0.5rem 0 0;
-}
 
 .scene-preview {
   position: absolute;
@@ -291,21 +222,17 @@ transition: border-color 800ms ease-out, box-shadow 800ms ease-out;
   border-radius: 0.75rem;
   overflow: hidden;
   background: var(--paper-deep);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 24px rgba(60, 45, 25, 0.2);
+  border: 1px solid var(--glass-border);
 }
 .scene-preview[hidden] { display: none; }
 .scene-preview video { width: 100%; height: 100%; object-fit: cover; }
 
-/* --- Stats: frosted glass card --- */
+/* --- Stats --- */
 .stats {
   display: flex;
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  backdrop-filter: blur(20px) saturate(1.2);
+  background: var(--paper);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-card);
-  box-shadow: 0 12px 32px rgba(60, 45, 25, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 .stat {
   flex: 1;
@@ -350,12 +277,11 @@ button {
   font-weight: 500;
   min-height: 2.75rem;
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.7);
+  background: #fffdf8;
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-control);
   padding: 0.625rem 1.5rem;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(60, 45, 25, 0.08);
 }
 button:hover:not(:disabled) { background: #ffffff; }
 button:active:not(:disabled) { transform: scale(0.96); }

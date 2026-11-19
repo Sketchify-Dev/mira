@@ -52,7 +52,6 @@ const els = {
   scenePreview: $('scene-preview'),
   pulseRing: $('pulse-ring'),
   moodName: $('mood-name'),
-  moodDescriptor: $('mood-descriptor'),
   stateLine: $('state-line'),
 };
 
@@ -140,12 +139,7 @@ function friendlyMessage(code, detail) {
   }
 }
 
-// --- Mirror scene: expression picks mood/color, pulse sets tempo/glow ---
-
-function hexToRgba(hex, alpha) {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
-}
+// --- Mirror scene: expression picks mood/color, pulse sets tempo ---
 
 function renderMirror({ bpm, expression, confidence }) {
   const mood = moodForExpression(expression);
@@ -155,19 +149,14 @@ function renderMirror({ bpm, expression, confidence }) {
   els.readoutPulse.textContent = bpm != null ? String(Math.round(bpm)) : ':';
   els.readoutExpression.textContent = mood.name;
   els.moodName.textContent = mood.name;
-  els.moodDescriptor.textContent = mood.descriptor;
 
-  // Tint the scene's ambient blobs with the mood hue; ring breathes at
-  // the heart's tempo.
+  // Tint the scene with the mood hue; ring breathes at the heart's tempo.
   els.scene.style.setProperty('--mood-hue', mood.hue);
   els.pulseRing.style.borderColor = mood.hue;
   els.pulseRing.style.animationDuration = `${ringPeriodMs(bpm)}ms`;
-  // Wordmark breathes at the heart's tempo while live.
+  // Wordmark beats at the heart's tempo while live.
   document.body.classList.add('is-live');
   document.body.style.setProperty('--beat-ms', `${ringPeriodMs(bpm)}ms`);
-  // Glow strength follows BPM across the 60–100 band.
-  const glow = bpm == null ? 0.25 : Math.min(0.6, Math.max(0.15, (bpm - 60) / 100));
-  els.pulseRing.style.boxShadow = `0 0 48px ${hexToRgba(mood.hue, glow)}`;
 
   if (isUnknownConfidence(confidence)) {
     setStateLine('Warming up. The mirror is calibrating to your face.', false);
@@ -186,12 +175,10 @@ function setStateLine(text, warn) {
 function resetScene() {
   els.readoutPulse.textContent = '--';
   els.readoutExpression.textContent = '--';
-  els.moodName.textContent = 'Still water';
-  els.moodDescriptor.textContent = 'Breathe easy.';
+  els.moodName.textContent = '--';
   els.scene.style.removeProperty('--mood-hue');
   els.pulseRing.style.borderColor = '';
   els.pulseRing.style.animationDuration = '';
-  els.pulseRing.style.boxShadow = '';
   document.body.classList.remove('is-live');
   document.body.style.removeProperty('--beat-ms');
   setStateLine('Press Start to begin.', false);
