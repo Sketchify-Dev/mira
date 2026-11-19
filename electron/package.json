@@ -11,7 +11,8 @@
     "start:harness": "npm run build && electron . --harness"
   },
   "dependencies": {
-    "@smartspectra/node-sdk": "latest"
+    "@smartspectra/node-sdk": "latest",
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "electron": "^43.8.1",

@@ -13,6 +13,7 @@ const {
 const { decodeMetrics } = require('@smartspectra/node-sdk/messages');
 const { createMockSignalSource } = require('./mock-signals');
 const { moodForExpression, ringPeriodMs, isLowConfidence, isUnknownConfidence } = require('./mirror');
+const livingScene = require('./living-scene');
 
 // Key arrives async over IPC (see preload __miraBridge). Resolved once at
 // boot; empty string means main has no key configured.
@@ -52,6 +53,7 @@ const els = {
   scenePreview: $('scene-preview'),
   pulseRing: $('pulse-ring'),
   moodName: $('mood-name'),
+  sceneCanvas: $('scene-canvas'),
   stateLine: $('state-line'),
 };
 
@@ -153,6 +155,7 @@ function renderMirror({ bpm, expression, confidence }) {
   // Tint the scene with the mood hue; ring breathes at the heart's tempo.
   els.scene.style.setProperty('--mood-hue', mood.hue);
   els.pulseRing.style.borderColor = mood.hue;
+  livingScene.setMood(mood.name, mood.hue, bpm);
   els.pulseRing.style.animationDuration = `${ringPeriodMs(bpm)}ms`;
   // Wordmark beats at the heart's tempo while live.
   document.body.classList.add('is-live');
@@ -179,6 +182,7 @@ function resetScene() {
   els.scene.style.removeProperty('--mood-hue');
   els.pulseRing.style.borderColor = '';
   els.pulseRing.style.animationDuration = '';
+  livingScene.stop();
   document.body.classList.remove('is-live');
   document.body.style.removeProperty('--beat-ms');
   setStateLine('Press Start to begin.', false);
@@ -190,6 +194,13 @@ els.btnBegin.addEventListener('click', () => {
   els.consentGate.hidden = true;
   els.mirror.hidden = false;
   setPhase('consented');
+  // Start the 3D layer once, the first time the mirror is revealed.
+  // Reduced motion gets a single static frame; no WebGL keeps the flat card.
+  try {
+    livingScene.start(els.sceneCanvas, window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  } catch {
+    /* flat card fallback */
+  }
   els.btnStart.focus();
 });
 

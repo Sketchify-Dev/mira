@@ -175,6 +175,13 @@ main {
   transition: background-color 800ms ease-out;
 }
 
+.scene-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .pulse-ring {
   position: absolute;
   width: 38%;

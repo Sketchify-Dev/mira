@@ -20,7 +20,7 @@ A living mirror that feels your pulse: face expressions change the character/sce
 - Add 3 expression states minimum (happy, surprised, neutral), smooth transitions, sound-free.
 - Empty states: no-face, low-confidence, camera-denied.
 - Test: each state reachable on camera; screenshots at 1440 and 390-equivalent window.
-- Status: UI de-slopped per electron/design.md (anti AI slop rules binding, unslop counter 0). Screenshots in electron/screenshots/: consent gate, Neutral/Happy/Surprised/Sad at 1440, Happy at 390. Found and fixed consent gate staying visible after Begin (display:flex overrode hidden). Sad/Happy verified visually; Neutral/Surprise captured at correct mock times.
+- Status: UI de-slopped per electron/design.md (anti AI slop rules binding, unslop counter 0). 3D living field landed: 70 soft glow sprites, mood hue tint, BPM tempo, reduced-motion single frame, no-WebGL flat fallback. Tests: mirror mapping + mock expressions verified via node, no dashes in touched files, no medical claims in copy. Screenshots in electron/screenshots/: consent gate, Neutral/Happy/Surprise/Sad at 1440, Happy at 390. Demo clip electron/demo-mirror.mp4 (17s, 1440x900, silent H.264). Screenshots in electron/screenshots/: consent gate, Neutral/Happy/Surprised/Sad at 1440, Happy at 390. Found and fixed consent gate staying visible after Begin (display:flex overrode hidden). Sad/Happy verified visually; Neutral/Surprise captured at correct mock times.
 
 ## Step 5: Submission pack
 - Demo video (live signal visible), public repo, DEV post with Consent and Data Handling section.
